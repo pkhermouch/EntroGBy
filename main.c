@@ -7,7 +7,8 @@
 #include "common.h"
 #include "ROM.h"
 #include "memory.h"
-
+#include "interpreter.h"
+#include "CPU.h"
 #define ROM_NAME "/home/forrest/ROMfile.gbc"
 
 void fatal(char* string, int line, char* file)
@@ -20,6 +21,7 @@ void fatal(char* string, int line, char* file)
 
 int main()
 {
+
     FILE* fp = fopen(ROM_NAME,"r");
     if (fp == NULL) {
         fatal("Failed to open the ROM file",__LINE__,__FILE__);
@@ -39,10 +41,13 @@ int main()
     assert(theRomFile != NULL);
     fread(theRomFile,1,lSize,fp);
     ROMheader theHeader;
+
     memcpy((void*)&theHeader,(const void*)theRomFile+0x100,sizeof(ROMheader));
 
-    for (int x = 0; x < 0x30; x++)
-        printf("0x%x ",theHeader.nintendo[x]);
+    executeInstruction(0x3C);
+    printf("0x%02x",REG_A);
+
+
 
     return 0;
 

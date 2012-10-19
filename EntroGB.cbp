@@ -12,7 +12,10 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
 					<Add option="-g" />
+					<Add option="-std=c99" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -31,9 +34,29 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="CPU.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="CPU.h" />
+		<Unit filename="ROM.h" />
+		<Unit filename="cb_switch.h" />
+		<Unit filename="common.h" />
+		<Unit filename="interpreter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="interpreter.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="memory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="memory.h" />
+		<Unit filename="opcode_switch.h" />
+		<Unit filename="tables.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="tables.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

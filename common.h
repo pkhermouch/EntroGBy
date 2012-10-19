@@ -8,14 +8,14 @@ typedef signed short s16;
 typedef unsigned int u32;
 typedef signed int s32;
 
-union reg16
+typedef union _reg16
 {
     u16 word;
     struct
     {
         u8 lo,hi;
     };
-};
+} reg16;
 
 #define C_FLAG 0x10
 #define H_FLAG 0x20
@@ -38,5 +38,10 @@ union reg16
 #define REG_SP (SP.word)
 #define REG_HL (HL.word)
 #define REG_PC (PC.word)
+
+#define _NOT_ZERO 0
+#define _ZERO 1
+#define _NOT_CARRY 2
+#define _CARRY 3
 
 #endif // COMMON_H_INCLUDED

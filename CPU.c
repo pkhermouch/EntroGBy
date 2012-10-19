@@ -1,5 +1,6 @@
 #include "common.h"
-
+#include "memory.h"
+#include "CPU.h"
 reg16 AF, BC, DE, HL, SP, PC;
 
 void setZflag(u8 whatever)
@@ -35,7 +36,7 @@ void setCflag(u8 whatever)
 }
 
 // ADC A,s
-void ADC(u8* source)
+void ADC8(u8* source)
 {
     setHflag(((REG_A & 0xf)+(*source&0xf)) & 0x10);
     REG_A += *source + (REG_F & C_FLAG ? 1 : 0);
@@ -45,16 +46,16 @@ void ADC(u8* source)
 }
 
 // ADC HL,ss
-void ADC(u16 *source)
+void ADC16(u16 *source)
 {
-    HL += *source;
+    REG_HL += *source;
     //flags
 }
 
 // ADD A,(HL)
 // ADD A,n
 // ADD A,r
-void ADD(u8* source)
+void ADD8(u8* source)
 {
     setHflag(((REG_A & 0xf)+(*source&0xf)) & 0x10);
     REG_A += *source;
@@ -64,9 +65,9 @@ void ADD(u8* source)
 }
 
 // ADD HL,ss
-void ADD(u16* source)
+void ADD16(u16* source)
 {
-    REG_HL += source;
+    REG_HL += *source;
 }
 
 // AND s
@@ -101,28 +102,28 @@ void CALL(u8 cc, u16 address)
     case 0:
         if(!(REG_F & Z_FLAG))
         {
-            PUSH(REG_PC);
+            PUSH(&REG_PC);
             REG_PC = address;
         }
         break;
     case 1:
         if((REG_F & Z_FLAG))
         {
-            PUSH(REG_PC);
+            PUSH(&REG_PC);
             REG_PC = address;
         }
         break;
     case 2:
         if(!(REG_F & C_FLAG))
         {
-            PUSH(REG_PC);
+            PUSH(&REG_PC);
             REG_PC = address;
         }
         break;
     case 3:
         if((REG_F & C_FLAG))
         {
-            PUSH(REG_PC);
+            PUSH(&REG_PC);
             REG_PC = address;
         }
         break;
@@ -131,9 +132,9 @@ void CALL(u8 cc, u16 address)
 }
 
 // CALL pq
-void CALL (u16 address)
+void CALL16 (u16 address)
 {
-    PUSH(REG_PC);
+    PUSH(&REG_PC);
     REG_PC = address;
 }
 
@@ -167,17 +168,17 @@ void DAA()
     // sad face
 }
 
-void DEC (u8* source)
+void DEC8 (u8* source)
 {
-    setHflag(*source &0xf == 0);
-    *source--;
+    setHflag((*source &0xf) == 0);
+    (*source)--;
     setZflag(*source);
     setNflag(1);
 }
 
-void DEC(u16* source)
+void DEC16(u16* source)
 {
-    *source--;
+    (*source)--;
 }
 
 // DEC IX
@@ -207,21 +208,21 @@ void HALT()
 // IM 2
 // IN ...
 
-void INC(u8* source)
+void INC8(u8* source)
 {
 
     setHflag((*source & 0xf) == 0xf);
     (*source)++;
     setZflag(*source);
     setNflag(0);
-    
+
 }
 
-void INC(u16* source)
+void INC16(u16* source)
 {
 
     (*source)++;
-    
+
 }
 
 // IND
@@ -259,10 +260,10 @@ void JP(u8 cc, u16 address)
         break;
 
     }
-    
+
 }
 
-void JP(u16 address)
+void JP8(u16 address)
 {
     REG_PC = address;
 }
@@ -299,17 +300,17 @@ void JR(u8 cc, s8 offset)
     }
 }
 
-void JR (s8 offset)
+void JR8 (s8 offset)
 {
     REG_PC += offset;
 }
 
-void LD(u16* dest, u16* source)
+void LD16(u16* dest, u16* source)
 {
     *dest = *source;
 }
 
-void LD(u8* dest, u8* source)
+void LD8(u8* dest, u8* source)
 {
     *dest = *source;
 }
@@ -320,7 +321,7 @@ void LD(u8* dest, u8* source)
 
 void NOP()
 {
-    
+
 }
 
 void OR(u8* source)
@@ -346,7 +347,7 @@ void POP(u16* source)
 // same as above
 void PUSH(u16* source)
 {
-    memory[REG_SP--] = *source & Oxff;
+    memory[REG_SP--] = *source & 0xff;
     memory[REG_SP--] = (*source >> 8);
 }
 
@@ -360,7 +361,7 @@ void RET()
     POP(&REG_PC);
 }
 
-void RET(u8 cc)
+void RET8(u8 cc)
 {
     switch(cc)
     {
@@ -396,7 +397,7 @@ void RET(u8 cc)
 // pandocs say return from subroutine then enable interrupts
 void RETI()
 {
-    
+
 }
 
 // RETN
@@ -404,7 +405,7 @@ void RETI()
 void RL(u8* source)
 {
     u8 tmp = REG_F & C_FLAG ? 1 : 0;
-    setCflag(*source & Ox80);
+    setCflag(*source & 0x80);
     *source = *source << 1;
     *source |= tmp;
     setZflag(*source);
@@ -420,7 +421,7 @@ void RLA()
 
 void RLC(u8* source)
 {
-    setCflag(*source & Ox80);
+    setCflag(*source & 0x80);
     *source <<= 1;
     *source |= (REG_F & C_FLAG ? 1 : 0);
     setZflag(*source);
@@ -438,7 +439,7 @@ void RLCA()
 void RR(u8* source)
 {
     u8 tmp = REG_F & C_FLAG ? 1 : 0;
-    setCflag(*source & Ox1);
+    setCflag(*source & 0x1);
     *source >>= 1;
     *source |= (tmp << 7);
     setZflag(*source);
@@ -454,7 +455,7 @@ void RRA()
 
 void RRC(u8* source)
 {
-    setCflag(*source & Ox1);
+    setCflag(*source & 0x1);
     *source >>= 1;
     *source |= (REG_F & C_FLAG ? 0x80 : 0);
     setZflag(*source);
@@ -475,16 +476,16 @@ void RST(u8 source)
     REG_PC = source;
 }
 
-void SBC(u8* source)
+void SBC8(u8* source)
 {
     u8 tmp = ~(*source);
-    ADC(&tmp);
+    ADC8(&tmp);
 }
 
-void SBC(u16* source)
+void SBC16(u16* source)
 {
     u16 tmp = ~(*source);
-    ADC(&tmp);
+    ADC16(&tmp);
 }
 
 void SCF()
@@ -529,7 +530,7 @@ void SRL(u8* source)
 void SUB(u8* source)
 {
     u8 tmp = ~(*source);
-    ADD(&tmp);
+    ADD8(&tmp);
 }
 
 void SWAP(u8* source)

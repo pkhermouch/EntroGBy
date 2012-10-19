@@ -13,3 +13,54 @@
 1350664926 /home/forrest/devel/EntroGB/ROM.h
 	"common.h"
 
+1350676537 source:/home/forrest/devel/EntroGBy/CPU.c
+	"common.h"
+	"memory.h"
+	"CPU.h"
+
+1350678441 /home/forrest/devel/EntroGBy/common.h
+
+1350665543 /home/forrest/devel/EntroGBy/memory.h
+
+1350679471 source:/home/forrest/devel/EntroGBy/main.c
+	<stdio.h>
+	<stdlib.h>
+	<assert.h>
+	<errno.h>
+	<string.h>
+	"common.h"
+	"ROM.h"
+	"memory.h"
+	"interpreter.h"
+	"CPU.h"
+
+1350664926 /home/forrest/devel/EntroGBy/ROM.h
+	"common.h"
+
+1350676939 source:/home/forrest/devel/EntroGBy/memory.c
+	<string.h>
+	"common.h"
+
+1350679160 /home/forrest/devel/EntroGBy/CPU.h
+
+1350678577 source:/home/forrest/devel/EntroGBy/interpreter.c
+	<stdio.h>
+	<stdlib.h>
+	"common.h"
+	"CPU.h"
+	"memory.h"
+	"tables.h"
+	"opcode_switch.h"
+	"cb_switch.h"
+
+1350676750 /home/forrest/devel/EntroGBy/tables.h
+
+1350679208 /home/forrest/devel/EntroGBy/opcode_switch.h
+
+1350677344 /home/forrest/devel/EntroGBy/cb_switch.h
+
+1350676721 source:/home/forrest/devel/EntroGBy/tables.c
+	"common.h"
+
+1350677523 /home/forrest/devel/EntroGBy/interpreter.h
+

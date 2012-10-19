@@ -1,0 +1,15 @@
+# depslib dependency file v1.0
+1350665200 source:/home/forrest/devel/EntroGB/main.c
+	<stdio.h>
+	<stdlib.h>
+	<assert.h>
+	<errno.h>
+	<string.h>
+	"common.h"
+	"ROM.h"
+
+1350662601 /home/forrest/devel/EntroGB/common.h
+
+1350664926 /home/forrest/devel/EntroGB/ROM.h
+	"common.h"
+

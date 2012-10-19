@@ -45,7 +45,7 @@ void run() {
         // Increment how many cycles we've added
         numCycles += getCycles(nextop);
         // Graphics stuff
-        
+
     }
 
 }
@@ -72,8 +72,9 @@ int main()
     assert(theRomFile != NULL);
     fread(theRomFile,1,lSize,fp);
     ROMheader theHeader;
-
     memcpy((void*)&theHeader,(const void*)theRomFile+0x100,sizeof(ROMheader));
+    init_memory_map(theRomFile,theHeader);
+
 
     //run();
 

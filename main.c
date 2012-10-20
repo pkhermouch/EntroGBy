@@ -14,6 +14,7 @@
 #define ROM_NAME "ROMfile.gbc"
 
 u32 numCycles;
+ROMheader theHeader;
 
 void fatal(char* string, int line, char* file)
 {
@@ -71,10 +72,10 @@ int main()
     theRomFile = (u8*) malloc(lSize);
     assert(theRomFile != NULL);
     fread(theRomFile,1,lSize,fp);
-    ROMheader theHeader;
+
     memcpy((void*)&theHeader,(const void*)theRomFile+0x100,sizeof(ROMheader));
     init_memory_map(theRomFile,theHeader);
-
+    printf("Memory config value: %u\n", theHeader.cart_type);
 
     //run();
 

@@ -11,9 +11,6 @@
 
 
 u8* memory;
-u32 cycles_to_add;
-
-
 
 void doCBprefix(u8 opcode);
 

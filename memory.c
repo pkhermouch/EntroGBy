@@ -6,7 +6,7 @@ u8 memory[0xffff];
 
 void init_memory_map(u8* ROMbuffer, u32 size)
 {
-    memcpy((void*)memory,(void*)ROMbuffer,sizeof(ROMbuffer) + 0x100);
+    memcpy((void*)memory,(void*)ROMbuffer, /*sizeof(ROMbuffer) + 0x100*/ 0x4000);
     memory[0xFF05] = 0x00 ;
     memory[0xFF06] = 0x00 ;
     memory[0xFF07] = 0x00 ;

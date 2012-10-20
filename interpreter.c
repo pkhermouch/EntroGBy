@@ -19,39 +19,43 @@ void INVALID(u8 opcode)
     printf("oh noes! opcode %x at PC: %x",opcode, PC.word);
 }
 
+
 u8* getUnsignedImmediate8()
 {
-    return (memory + PC.word + 1);
+    return read8address(REG_PC + 1);
 }
 
 u16* getUnsignedImmediate16()
 {
-    return (u16*)(memory + PC.word + 1);
+    return read16address(REG_PC + 1);
 }
 
 u8* getUnsignedIndirectAddress(u16 address)
 {
-    return (u8*)(memory + address);
+    return read8address(address);
 }
 
 s8* getSignedImmediate8()
 {
-    return (s8*)(memory + PC.word + 1);
+    return (s8*)read8address(REG_PC + 1);
 }
 
 s16* getSignedImmediate16()
 {
-    return (s16*)(memory + PC.word + 1);
+    return (s16*)read16address(REG_PC + 1);
 }
 
 s8* getSignedIndirectAddress(u16 address)
 {
-    return (s8*)(memory + address);
+    return (s8*)read16address(address);
 }
 
 void executeInstruction(u8 opcode)
 {
     //cycles_to_add = cycles[opcode];
+
+    printf("0x%04X: 0x%02X ", REG_PC,opcode);
+
     switch (opcode)
     {
         #include "opcode_switch.h"

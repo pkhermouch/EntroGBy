@@ -8,7 +8,7 @@ u8 memory[0xffff];
 
 u8 current_ROM_bank, current_EXRAM_bank, current_CHAR_bank, current_INRAM_bank;
 u8 **ROM_banks, **EXRAM_banks, **CHAR_banks, **INRAM_banks;
-
+extern ROMheader theHeader;
 void init_memory_map(u8* ROMbuffer, ROMheader theHeader)
 {
     u8 temp;
@@ -182,10 +182,163 @@ u8 read8(u16 address)
         exit(EXIT_FAILURE);
     }
     return memory[address];
-    
+
 }
+
+u8 MBCregisters[4];
+u8 enable_external_EXRAM;
 
 void write8(u16 address, u8 what)
 {
+    if(address < 0x8000)
+    {
+        //MBC1
+        if(theHeader.cart_type >= 1 && theHeader.cart_type <= 3)
+        {
+            if (address < 0x2000)
+                enable_external_EXRAM = what == 0xa ? 1 : 0;
+            if (address < 0x4000)
+            {
+                MBCregisters[1] = what;
+                current_ROM_bank = MBCregisters[1] & 0x1f;
+            }
+            if (address < 0x6000)
+            {
+                MBCregisters[2] = what;
+                if(MBCregisters[3] == 0)
+                    current_ROM_bank |= (MBCregisters[2] & 0x3) << 5;
+                else if(MBCregisters[3] == 1)
+                    current_EXRAM_bank = MBCregisters[2];
+            }
+            if(address < 0x8000)
+            {
+                MBCregisters[3] = what;
+            }
+        }
 
+        //MBC2
+        else if(theHeader.cart_type >= 5 && theHeader.cart_type <= 6)
+        {
+            if (address < 0x0fff)
+                enable_external_EXRAM = what == 0xa ? 1 : 0;
+            else if (address >= 0x2100 && address <= 0x21ff)
+            {
+                MBCregisters[1] = what;
+                current_ROM_bank = what;
+            }
+        }
+
+        else if(theHeader.cart_type >= 0xf && theHeader.cart_type <= 0x13)
+        {
+            if(address < 0x2000)
+                enable_external_EXRAM = what == 0xa ? 1 : 0;
+            else if(address < 0x4000)
+            {
+                MBCregisters[1] = what;
+                current_ROM_bank = what;
+            }
+            else if(address < 0x6000)
+            {
+                MBCregisters[2] = what;
+                if (MBCregisters[2] <=3)
+                    current_EXRAM_bank = what;
+                else if(MBCregisters[2] >=8 && MBCregisters[2] <= 0xc)
+                {
+
+                }
+            }
+            if(address < 0x8000)
+            {
+                MBCregisters[3] = what;
+                //do timer things
+            }
+
+        }
+        else if(theHeader.cart_type >= 0x19 && theHeader.cart_type <= 0x1e)
+        {
+            if(address < 0x2000)
+                enable_external_EXRAM = what == 0xa ? 1 : 0;
+            else if(address < 0x3000)
+                MBCregisters[1] = what;
+            else if(address < 0x4000)
+                MBCregisters[2] = what & 1;
+            else if(address < 0x6000)
+                MBCregisters[3] = what & 0xf;
+            current_ROM_bank = MBCregisters[1] | MBCregisters[2] << 8;
+            current_EXRAM_bank = MBCregisters[3];
+        }
+    }
+
+    if (address >= 0xa000 && address < 0xc000)
+        EXRAM_banks[current_EXRAM_bank][address - 0xa000] = what;
+    if(address >= 0xc000 && address < 0xe000)
+        INRAM_banks[current_INRAM_bank][address - 0xc000] = what;
+    if(address >= 0xe000 && address <=0xfdff)
+    {
+        printf("you fucked up in writing to memory\n");
+        exit(1);
+    }
+    memory[address] = what;
+}
+
+u8* read8address(u16 address)
+{
+    if (address < 0x4000) {
+        return &ROM_banks[0][address];
+    }
+    if (address < 0x8000) {
+        return &ROM_banks[current_ROM_bank][address - 0x4000];
+    }
+    if (address < 0xA000) {
+        return &CHAR_banks[current_CHAR_bank][address - 0x8000];
+    }
+    if (address < 0xC000) {
+        return &EXRAM_banks[current_EXRAM_bank][address - 0xA000];
+    }
+    if (address < 0xD000) {
+        return &INRAM_banks[0][address - 0xC000];
+    }
+    if (address < 0xE000) {
+        return &INRAM_banks[current_INRAM_bank][address - 0xD000];
+    }
+    if (address < 0xFE00) {
+        printf("Attempt to access prohibited RAM: 0x%x\n", address);
+        exit(EXIT_FAILURE);
+    }
+    else if (address >= 0xFEA0 && address < 0xFF00) {
+        printf("Attempt to access prohibited RAM 2: 0x%x\n", address);
+        exit(EXIT_FAILURE);
+    }
+    return &memory[address];
+}
+
+u16* read16address(u16 address)
+{
+    if (address < 0x4000) {
+        return (u16*)&ROM_banks[0][address];
+    }
+    if (address < 0x8000) {
+        return (u16*)&ROM_banks[current_ROM_bank][address - 0x4000];
+    }
+    if (address < 0xA000) {
+        return (u16*)&CHAR_banks[current_CHAR_bank][address - 0x8000];
+    }
+    if (address < 0xC000) {
+        return (u16*)&EXRAM_banks[current_EXRAM_bank][address - 0xA000];
+    }
+    if (address < 0xD000) {
+        return (u16*)&INRAM_banks[0][address - 0xC000];
+    }
+    if (address < 0xE000) {
+        return (u16*)&INRAM_banks[current_INRAM_bank][address - 0xD000];
+    }
+    if (address < 0xFE00) {
+        printf("Attempt to access prohibited RAM: 0x%x\n", address);
+        exit(EXIT_FAILURE);
+    }
+    else if (address >= 0xFEA0 && address < 0xFF00) {
+        printf("Attempt to access prohibited RAM 2: 0x%x\n", address);
+        exit(EXIT_FAILURE);
+    }
+    return (u16*)&memory[address];
 }

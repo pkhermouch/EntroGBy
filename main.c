@@ -27,25 +27,27 @@ void fatal(char* string, int line, char* file)
 void run() {
 
     u8 nextop;
-    u8 orig_pc;
+    u16 orig_pc;
 
     numCycles = 0;
-
-    while (1) {
+    int counter = 0;
+    while (counter < 10000) {
 
         orig_pc = REG_PC;
         // Get the next instruction
-        u8 nextop = memory[REG_PC];
+        u8 nextop = read8(REG_PC);
         printf("nextop 0x%02x instruction length %u cycles %u\n", nextop, getLength(nextop), getCycles(nextop));
         // Run it
         executeInstruction(nextop);
         // IF REG_PC didn't change, increment it by the instruction's length
+        printf("orig_pc: 0x%04X  REG_PC: 0x%04X\n",orig_pc,REG_PC);
         if (REG_PC == orig_pc) {
             REG_PC += getLength(nextop);
         }
         // Increment how many cycles we've added
         numCycles += getCycles(nextop);
         // Graphics stuff
+        counter++;
 
     }
 
@@ -77,7 +79,14 @@ int main()
     init_memory_map(theRomFile,theHeader);
     printf("Memory config value: %u\n", theHeader.cart_type);
 
-    //run();
+    REG_PC = 0x100;
+    REG_AF = 0x01B0;
+    REG_BC = 0x0013;
+    REG_DE = 0x00D8;
+    REG_HL = 0x014D;
+    REG_SP = 0xFFFE;
+
+    run();
 
     return 0;
 

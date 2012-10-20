@@ -248,7 +248,7 @@ void JP(u8 cc, u16 address)
         break;
     case 2:
     if(!(REG_F & C_FLAG))
-        {
+        {20
             REG_PC = address;
         }
         break;

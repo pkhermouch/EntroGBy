@@ -681,13 +681,14 @@
         RST(0x18);
         break;
     case 0xE0:
-        memory[0xff00 + *getUnsignedImmediate8()] = REG_A;
+        printf("reg a: 0x%02X\n",REG_A);
+        write8(0xff00 + *getUnsignedImmediate8(), REG_A);
         break;
     case 0xE1:
         POP(&REG_HL);
         break;
     case 0xE2:
-        memory[0xff00 + REG_C] = REG_A;
+        write8(0xff00 + REG_C, REG_A);
         break;
     case 0xE3:
         INVALID(opcode);
@@ -729,13 +730,13 @@
         RST(0x28);
         break;
     case 0xF0:
-        REG_A = memory[0xff00 + *getUnsignedImmediate8()];
+        REG_A = read8(0xff00 + *getUnsignedImmediate8());
         break;
     case 0xF1:
         POP(&REG_AF);
         break;
     case 0xF2:
-        REG_A = memory[0xff00 + REG_C];
+        REG_A = read8(0xff00 + REG_C);
         break;
     case 0xF3:
         DI();

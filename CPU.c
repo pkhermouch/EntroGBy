@@ -210,11 +210,18 @@ void HALT()
 void INC(u8* source)
 {
 
+    setHflag((*source & 0xf) == 0xf);
+    (*source)++;
+    setZflag(*source);
+    setNflag(0);
+    
 }
 
 void INC(u16* source)
 {
 
+    (*source)++;
+    
 }
 
 // IND
@@ -224,51 +231,105 @@ void INC(u16* source)
 
 void JP(u8 cc, u16 address)
 {
+    switch(cc)
+    {
+    case 0:
+        if(!(REG_F & Z_FLAG))
+        {
+            REG_PC = address;
+        }
+        break;
+    case 1:
+        if((REG_F & Z_FLAG))
+        {
+            REG_PC = address;
+        }
+        break;
+    case 2:
+    if(!(REG_F & C_FLAG))
+        {
+            REG_PC = address;
+        }
+        break;
+    case 3:
+        if((REG_F & C_FLAG))
+        {
+            REG_PC = address;
+        }
+        break;
 
+    }
+    
 }
 
 void JP(u16 address)
 {
-
+    REG_PC = address;
 }
 
 void JR(u8 cc, s8 offset)
 {
+    switch(cc)
+    {
+    case 0:
+        if(!(REG_F & Z_FLAG))
+        {
+            REG_PC += offset;
+        }
+        break;
+    case 1:
+        if((REG_F & Z_FLAG))
+        {
+            REG_PC = offset;
+        }
+        break;
+    case 2:
+    if(!(REG_F & C_FLAG))
+        {
+            REG_PC = offset;
+        }
+        break;
+    case 3:
+        if((REG_F & C_FLAG))
+        {
+            REG_PC = offset;
+        }
+        break;
 
+    }
 }
 
 void JR (s8 offset)
 {
-
+    REG_PC += offset;
 }
 
 void LD(u16* dest, u16* source)
 {
-
+    *dest = *source;
 }
 
 void LD(u8* dest, u8* source)
 {
-
+    *dest = *source;
 }
 
 // LD (C), A -- must add using reset vector or something. Need go way to call it
 
 // block load instructions... whatever
 
-void NEG()
-{
-
-}
-
 void NOP()
 {
-
+    
 }
 
 void OR(u8* source)
 {
-
+    REG_A |= *source;
+    setZflag(REG_A);
+    setNflag(0);
+    setCflag(0);
+    setHflag(0);
 }
 
 
@@ -276,131 +337,217 @@ void OR(u8* source)
 // OUT ...
 
 // NOTE this accepts a reg16*, not a u16*. Should change
-void POP(reg16* source)
+void POP(u16* source)
 {
-
+    *source = memory[REG_SP++] << 8;
+    *source |= memory[REG_SP++];
 }
 
-// same as aboce
-void PUSH(reg16* source)
+// same as above
+void PUSH(u16* source)
 {
-
+    memory[REG_SP--] = *source & Oxff;
+    memory[REG_SP--] = (*source >> 8);
 }
 
 void RES(u8 bit, u8* source)
 {
-
+    *source &= ~(1 << bit);
 }
 
 void RET()
 {
-
+    POP(&REG_PC);
 }
 
-// CHANGE!!!  No cc passing. Determined within function
 void RET(u8 cc)
 {
+    switch(cc)
+    {
+    case 0:
+        if(!(REG_F & Z_FLAG))
+        {
+            RET();
+        }
+        break;
+    case 1:
+        if((REG_F & Z_FLAG))
+        {
+            RET();
+        }
+        break;
+    case 2:
+    if(!(REG_F & C_FLAG))
+        {
+            RET();
+        }
+        break;
+    case 3:
+        if((REG_F & C_FLAG))
+        {
+            RET();
+        }
+        break;
 
+    }
 }
 
 // book says return from interrupt
 // pandocs say return from subroutine then enable interrupts
 void RETI()
 {
-
+    
 }
 
 // RETN
 
 void RL(u8* source)
 {
-
+    u8 tmp = REG_F & C_FLAG ? 1 : 0;
+    setCflag(*source & Ox80);
+    *source = *source << 1;
+    *source |= tmp;
+    setZflag(*source);
+    setHflag(0);
+    setNflag(0);
 }
 
 void RLA()
 {
-
+    RL(&REG_A);
 }
 
 
 void RLC(u8* source)
 {
-
+    setCflag(*source & Ox80);
+    *source <<= 1;
+    *source |= (REG_F & C_FLAG ? 1 : 0);
+    setZflag(*source);
+    setHflag(0);
+    setNflag(0);
 }
 
 
 void RLCA()
 {
-
+    RLC(&REG_A);
 }
 
 
 void RR(u8* source)
 {
+    u8 tmp = REG_F & C_FLAG ? 1 : 0;
+    setCflag(*source & Ox1);
+    *source >>= 1;
+    *source |= (tmp << 7);
+    setZflag(*source);
+    setHflag(0);
+    setNflag(0);
 
 }
 
 void RRA()
 {
-
+    RR(&REG_A);
 }
 
 void RRC(u8* source)
 {
+    setCflag(*source & Ox1);
+    *source >>= 1;
+    *source |= (REG_F & C_FLAG ? 0x80 : 0);
+    setZflag(*source);
+    setHflag(0);
+    setNflag(0);
 
 }
 
 void RRCA()
 {
+    RRC(&REG_A);
 }
 
 
 void RST(u8 source)
 {
-
+    PUSH(&REG_PC);
+    REG_PC = source;
 }
 
 void SBC(u8* source)
 {
-
+    u8 tmp = ~(*source);
+    ADC(&tmp);
 }
 
 void SBC(u16* source)
 {
-
+    u16 tmp = ~(*source);
+    ADC(&tmp);
 }
 
 void SCF()
 {
-
+    setCflag(1);
+    setNflag(0);
+    setHflag(0);
 }
 
 void SET(u8 bit, u8* source)
 {
-
+    *source |= (1 << bit);
 }
 
 void SLA(u8* source)
 {
+    setCflag(*source & 0x80);
+    *source <<= 1;
+    setZflag(*source);
+    setNflag(0);
+    setHflag(0);
 }
 
 void SRA(u8* source)
 {
+    u8 tmp = *source & 0x80;
+    setCflag(*source & 0x1);
+    *source >>= 1;
+    *source |= tmp;
+    setZflag(*source);
+    setHflag(0);
+    setNflag(0);
 }
 
 void SRL(u8* source)
 {
+    SRA(source);
+    *source &= ~0x80;
+    setZflag(*source);
 }
 
 void SUB(u8* source)
 {
+    u8 tmp = ~(*source);
+    ADD(&tmp);
 }
 
 void SWAP(u8* source)
 {
-
+    u8 tmp = *source & 0xf;
+    *source <<= 4;
+    *source |= tmp;
+    setNflag(0);
+    setHflag(0);
+    setCflag(0);
+    setZflag(*source);
 }
 
 void XOR(u8* source)
 {
+    REG_A ^= *source;
+    setZflag(REG_A);
+    setNflag(0);
+    setCflag(0);
+    setHflag(0);
 }

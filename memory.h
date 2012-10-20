@@ -2,7 +2,7 @@
 #define MEMORY_H_INCLUDED
 #include "ROM.h"
 
-extern u8* memory;
+extern u8 *memory;
 
 void init_memory_map(u8* ROMbuffer, ROMheader theHeader);
 u8 read8(u16 address);

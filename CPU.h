@@ -1,6 +1,36 @@
 #ifndef CPU_H_INCLUDED
 #define CPU_H_INCLUDED
 
+#define INTERRUPTS_ENABLED ((u16) 0xffff)
+#define INTERRUPT_FLAG ((u16) 0xff0f)
+#define INTERRUPT_VBLANK_BIT 0x1
+#define INTERRUPT_LCD_BIT 0x2
+#define INTERRUPT_TIMER_BIT 0x4
+#define INTERRUPT_JOYPAD_BIT 0x8
+#define INTERRUPT_VBLANK_ROUTINE ((u16) 0x40)
+#define INTERRUPT_LCD_ROUTINE ((u16) 0x48)
+#define INTERRUPT_TIMER_ROUTINE ((u16) 0x50)
+#define INTERRUPT_JOYPAD_ROUTINE ((u16) 0x60)
+
+#define REG_P1 ((u16) 0xff00)
+#define REG_DIV ((u16) 0xff04)
+#define REG_TIMA ((u16) 0xff05)
+#define REG_TMA ((u16) 0xff06)
+#define REG_TAC ((u16) 0xff07)
+#define REG_LCDC ((u16) 0xff40)
+#define REG_STAT ((u16) 0xff41)
+#define REG_SCY ((u16) 0xff42)
+#define REG_SCX ((u16) 0xff43)
+#define REG_LY ((u16) 0xff44)
+#define REG_LYC ((u16) 0xff45)
+#define REG_DMA ((u16) 0xff46)
+#define REG_BGP ((u16) 0xff47)
+#define REG_OBP0 ((u16) 0xff48)
+#define REG_OBP1 ((u16) 0xff49)
+#define REG_WY ((u16) 0xff4a)
+#define REG_WX ((u16) 0xff4b)
+#define REG_VBK ((u16) 0xff4f)
+
 extern reg16 AF, BC, DE, HL, SP, PC;
 
 void setZflag(u8 whatever);

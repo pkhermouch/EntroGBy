@@ -1,7 +1,9 @@
 #include "common.h"
 #include "memory.h"
 #include "CPU.h"
+
 reg16 AF, BC, DE, HL, SP, PC;
+u8 interrupt_occurred;
 
 void setZflag(u8 whatever)
 {
@@ -165,7 +167,9 @@ void CPL()
 
 void DAA()
 {
-    // sad face
+    u8 ones = REG_A % 10, tens = REG_A / 10;
+    REG_A = ones | (tens << 4);
+    
 }
 
 void DEC8 (u8* source)
@@ -186,21 +190,22 @@ void DEC16(u16* source)
 
 void DI()
 {
-
+    write8(INTERRUPTS_ENABLED, 0);
 }
 
 // DJNZ e
 
 void EI()
 {
-
+    write8(INTERRUPTS_ENABLED, 0xf);
 }
 
 // EX ...
 
 void HALT()
 {
-    // ...
+    // Make this commmand get run again
+    REG_PC--;
 }
 
 // IM 0
@@ -248,7 +253,7 @@ void JP(u8 cc, u16 address)
         break;
     case 2:
     if(!(REG_F & C_FLAG))
-        {20
+        {
             REG_PC = address;
         }
         break;
@@ -281,19 +286,19 @@ void JR(u8 cc, s8 offset)
     case 1:
         if((REG_F & Z_FLAG))
         {
-            REG_PC = offset;
+            REG_PC += offset;
         }
         break;
     case 2:
     if(!(REG_F & C_FLAG))
         {
-            REG_PC = offset;
+            REG_PC += offset;
         }
         break;
     case 3:
         if((REG_F & C_FLAG))
         {
-            REG_PC = offset;
+            REG_PC += offset;
         }
         break;
 
@@ -340,15 +345,23 @@ void OR(u8* source)
 // NOTE this accepts a reg16*, not a u16*. Should change
 void POP(u16* source)
 {
+    /*
     *source = memory[REG_SP++] << 8;
     *source |= memory[REG_SP++];
+    */
+    *source = read8(++REG_SP) << 8;
+    *source |= read8(++REG_SP);
 }
 
 // same as above
 void PUSH(u16* source)
 {
+    /*
     memory[REG_SP--] = *source & 0xff;
     memory[REG_SP--] = (*source >> 8);
+    */
+    write8(REG_SP--, *source & 0xff);
+    write8(REG_SP--, *source >> 8);
 }
 
 void RES(u8 bit, u8* source)
@@ -397,7 +410,8 @@ void RET8(u8 cc)
 // pandocs say return from subroutine then enable interrupts
 void RETI()
 {
-
+    RET();
+    write8(INTERRUPTS_ENABLED, 0xf);
 }
 
 // RETN

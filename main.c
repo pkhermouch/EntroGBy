@@ -31,7 +31,7 @@ void run() {
 
     numCycles = 0;
     int counter = 0;
-    while (counter < 10000) {
+    while (counter++ < 10000) {
 
         orig_pc = REG_PC;
         // Get the next instruction
@@ -40,15 +40,56 @@ void run() {
         // Run it
         executeInstruction(nextop);
         // IF REG_PC didn't change, increment it by the instruction's length
-        printf("orig_pc: 0x%04X  REG_PC: 0x%04X\n",orig_pc,REG_PC);
         if (REG_PC == orig_pc) {
             REG_PC += getLength(nextop);
         }
         // Increment how many cycles we've added
         numCycles += getCycles(nextop);
         // Graphics stuff
-        counter++;
 
+        // If there was an interrupt, check if we should
+        // respond to it. If so, respond
+        u8 int_flag = read8(INTERRUPT_FLAG);
+        if (int_flag) {
+            // If handling of the appropriate interrupt is enabled
+            if (read8(INTERRUPTS_ENABLED) & int_flag) {
+                write8(INTERRUPT_FLAG, 0);
+                // Store where REG_PC was pointing before the interrupt
+                u16 old_pc = REG_PC;
+                PUSH(&REG_PC);
+                if (int_flag & INTERRUPT_VBLANK_BIT) {
+                    REG_PC = INTERRUPT_VBLANK_ROUTINE;
+                }
+                else if (int_flag & INTERRUPT_LCD_BIT) {
+                    REG_PC = INTERRUPT_LCD_ROUTINE;
+                }
+                else if (int_flag & INTERRUPT_TIMER_BIT) {
+                    REG_PC = INTERRUPT_TIMER_ROUTINE;
+                }
+                else if (int_flag & INTERRUPT_JOYPAD_BIT) {
+                    REG_PC = INTERRUPT_JOYPAD_ROUTINE;
+                }
+                // Run the interrupt routine until we return to
+                // the original place in the program
+                while (REG_PC != old_pc) {
+                    u16 orig_pc2 = REG_PC;
+                    u8 nextop2 = read8(REG_PC);
+                    executeInstruction(nextop2);
+                    if (REG_PC == orig_pc2) {
+                        REG_PC += getLength(nextop2);
+                    }
+                    numCycles += getCycles(nextop2);
+                }
+                // If we interrupted while HALT was called,
+                // we want to proceed to the next instruction
+                if (read8(REG_PC) == 0x76) {
+                    REG_PC++;
+                }
+            }
+        }
+        if (counter == 8000) {
+            write8(0xff44, 0x91);
+        }
     }
 
 }

@@ -3,12 +3,17 @@
 #include <stdio.h>
 #include "common.h"
 #include "ROM.h"
+#include "CPU.h"
 
 u8 memory[0xffff];
 
-u8 current_ROM_bank, current_EXRAM_bank, current_CHAR_bank, current_INRAM_bank;
-u8 **ROM_banks, **EXRAM_banks, **CHAR_banks, **INRAM_banks;
+u8 current_ROM_bank, current_EXRAM_bank, current_VIDEO_bank, current_INRAM_bank;
+u8 **ROM_banks, **EXRAM_banks, **VIDEO_banks, **INRAM_banks;
+u16 OBJ_ON, OBJ_BLOCK_COMPOSITION, BG_CODE_AREA, BG_CHAR_DATA, WINDOWING_ON, WINDOW_CODE_AREA, LCD_ON;
 extern ROMheader theHeader;
+
+u8 read8(u16 address);
+
 void init_memory_map(u8* ROMbuffer, ROMheader theHeader)
 {
     u8 temp;
@@ -110,9 +115,19 @@ void init_memory_map(u8* ROMbuffer, ROMheader theHeader)
         memcpy(ROM_banks[x],ROMbuffer + x * 0x4000, 0x4000);
     }
 
-    CHAR_banks = (u8 **) malloc(sizeof(u8 *) * 2);
-    CHAR_banks[0] = (u8 *) malloc(sizeof(u8) * 0x2000);
-    CHAR_banks[1] = (u8 *) malloc(sizeof(u8) * 0x2000);
+    VIDEO_banks = (u8 **) malloc(sizeof(u8 *) * 2);
+    VIDEO_banks[0] = (u8 *) malloc(sizeof(u8) * 0x4000);
+    VIDEO_banks[1] = (u8 *) malloc(sizeof(u8) * 0x4000);
+
+    // Set up video RAM parameters
+    u8 lcd_flags = read8(REG_LCDC);
+    OBJ_ON = lcd_flags & 0x2 ? 1 : 0;
+    OBJ_BLOCK_COMPOSITION = lcd_flags & 0x4 ? 0x10 : 0x8;
+    BG_CODE_AREA = lcd_flags & 0x8 ? 0x9c00 : 0x9800;
+    BG_CHAR_DATA = lcd_flags & 0x10 ? 0x8000 : 0x8800;
+    WINDOWING_ON = lcd_flags & 0x20 ? 1 : 0;
+    WINDOW_CODE_AREA = lcd_flags & 0x40 ? 0x9c00 : 0x9800;
+    LCD_ON = lcd_flags & 0x80 ? 1 : 0;
 
     INRAM_banks = (u8 **) malloc(8 * sizeof(u8 *));
     for (int x = 0; x < 8; x++) {
@@ -162,7 +177,7 @@ u8 read8(u16 address)
         return ROM_banks[current_ROM_bank][address - 0x4000];
     }
     if (address < 0xA000) {
-        return CHAR_banks[current_CHAR_bank][address - 0x8000];
+        return VIDEO_banks[current_VIDEO_bank][address - 0x8000];
     }
     if (address < 0xC000) {
         return EXRAM_banks[current_EXRAM_bank][address - 0xA000];
@@ -290,7 +305,7 @@ u8* read8address(u16 address)
         return &ROM_banks[current_ROM_bank][address - 0x4000];
     }
     if (address < 0xA000) {
-        return &CHAR_banks[current_CHAR_bank][address - 0x8000];
+        return &VIDEO_banks[current_VIDEO_bank][address - 0x8000];
     }
     if (address < 0xC000) {
         return &EXRAM_banks[current_EXRAM_bank][address - 0xA000];
@@ -321,7 +336,7 @@ u16* read16address(u16 address)
         return (u16*)&ROM_banks[current_ROM_bank][address - 0x4000];
     }
     if (address < 0xA000) {
-        return (u16*)&CHAR_banks[current_CHAR_bank][address - 0x8000];
+        return (u16*)&VIDEO_banks[current_VIDEO_bank][address - 0x8000];
     }
     if (address < 0xC000) {
         return (u16*)&EXRAM_banks[current_EXRAM_bank][address - 0xA000];

@@ -54,7 +54,7 @@ void executeInstruction(u8 opcode)
 {
     //cycles_to_add = cycles[opcode];
 
-    printf("0x%04X: 0x%02X ", REG_PC,opcode);
+    printf("REG_PC: 0x%04X\n", REG_PC);
 
     switch (opcode)
     {
